@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1" prefHeight="600.0" prefWidth="1200.0" stylesheets="/editor.css"
-            xmlns="http://javafx.com/javafx/8" fx:controller="cz.gresak.keyboardeditor.EditorController">
+            xmlns="http://javafx.com/javafx/21" fx:controller="cz.gresak.keyboardeditor.EditorController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="File">

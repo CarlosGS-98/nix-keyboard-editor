@@ -455,17 +455,20 @@ public class EditorController implements Initializable {
         alert.setTitle("About");
         alert.setHeaderText("About this application");
         VBox content = new VBox();
-        content.getChildren().add(new Text("Keyboard layout editor is an application used to help create custom keyboard layouts.\n" +
+        content.getChildren().add(new Text("*NIX Keyboard Editor is an application used to help create custom keyboard layouts.\n" +
                 "Application works with X Keyboard Extension (XKB) – it loads current keyboard layout using xkbcomp and it is able to export symbols file.\n\n" +
-                "Author: Viktor Grešák\n" +
-                "Created in 2019\n\n" +
+                "Original Author:\tViktor Grešák\n" +
+                "Fork Authors:\tCarlos González Sanz\n" +
+                "© 2019 - 2025\n\n" +
                 "Third party software used:"));
-        content.getChildren().add(new WebsiteLink("Gson 2.8.5", "https://github.com/google/gson"));
-        content.getChildren().add(new WebsiteLink("Apache Commons Exec 1.3", "https://commons.apache.org/proper/commons-exec"));
-        content.getChildren().add(new WebsiteLink("Apache Commons Lang 3.8.1", "https://commons.apache.org/proper/commons-lang"));
-        content.getChildren().add(new WebsiteLink("Apache Commons IO 2.6", "https://commons.apache.org/proper/commons-io"));
-        content.getChildren().add(new WebsiteLink("Gradle 5.2.1", "https://gradle.org"));
-        content.getChildren().add(new FlowPane(new Text("All software used is licensed under "), new WebsiteLink("Apache License 2.0", "http://www.apache.org/licenses/LICENSE-2.0")));
+        content.getChildren().add(new WebsiteLink("GSON 2.11", "https://github.com/google/gson"));
+        content.getChildren().add(new WebsiteLink("Apache Commons Exec 1.4", "https://commons.apache.org/proper/commons-exec"));
+        content.getChildren().add(new WebsiteLink("Apache Commons Lang 3.17", "https://commons.apache.org/proper/commons-lang"));
+        content.getChildren().add(new WebsiteLink("Apache Commons IO 2.18", "https://commons.apache.org/proper/commons-io"));
+        content.getChildren().add(new WebsiteLink("Hamcrest 3.0", "https://hamcrest.org"));
+        content.getChildren().add(new WebsiteLink("Maven 3.8.5", "https://gradle.org"));
+        content.getChildren().add(new FlowPane(new Text("All software used (except Hamcrest) is licensed under the "), new WebsiteLink("Apache License 2.0", "http://www.apache.org/licenses/LICENSE-2.0")));
+        content.getChildren().add(new FlowPane(new Text("Hamcrest is licensed under the "), new WebsiteLink("BSD 3-Clause License", "https://opensource.org/license/BSD-3-clause")));
         alert.getDialogPane().setContent(content);
         alert.showAndWait();
     }

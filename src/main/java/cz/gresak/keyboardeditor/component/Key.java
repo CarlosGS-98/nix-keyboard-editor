@@ -1,8 +1,8 @@
 package cz.gresak.keyboardeditor.component;
 
-import com.sun.javafx.tk.FontLoader;
-import com.sun.javafx.tk.FontMetrics;
-import com.sun.javafx.tk.Toolkit;
+//import com.sun.javafx.tk.FontLoader;
+//import com.sun.javafx.tk.FontMetrics;
+//import com.sun.javafx.tk.Toolkit;
 import cz.gresak.keyboardeditor.model.ModelKey;
 import cz.gresak.keyboardeditor.service.ServiceLoader;
 import cz.gresak.keyboardeditor.service.api.FontProvider;
@@ -152,30 +152,53 @@ public class Key extends Pane {
         text.setFont(new Font(font.getName(), fontSize));
     }
 
-
     /**
      * Updates position of text.
      */
     private void layoutChars() {
-        FontLoader fontLoader = Toolkit.getToolkit().getFontLoader();
+        /*FontLoader fontLoader = Toolkit.getToolkit().getFontLoader();
         FontMetrics topLeftFont = fontLoader.getFontMetrics(topLeftChar.getFont());
         FontMetrics bottomLeftFont = fontLoader.getFontMetrics(bottomLeftChar.getFont());
         FontMetrics topRightFont = fontLoader.getFontMetrics(topRightChar.getFont());
-        FontMetrics bottomRightFont = fontLoader.getFontMetrics(bottomRightChar.getFont());
-        // vertical alignment
-        double topLine = Math.max(topLeftFont.getLineHeight(), topRightFont.getLineHeight());
-        double bottomLine = Math.max(topLine, getHeight() / 2 - VPADDING * 2) + Math.max(bottomLeftFont.getLineHeight(), bottomRightFont.getLineHeight());
+        FontMetrics bottomRightFont = fontLoader.getFontMetrics(bottomRightChar.getFont());*/
+
+        /*Font topLeftFont = topLeftChar.getFont();
+        Font bottomLeftFont = bottomLeftChar.getFont();
+        Font topRightFont = topRightChar.getFont();
+        Font bottomRightFont = bottomRightChar.getFont();*/
+
+        // Vertical alignment
+        double topLine = Math.max(
+                topLeftChar.getBoundsInLocal().getHeight(),
+                topRightChar.getBoundsInLocal().getHeight()
+        );
+
+        double bottomLine = Math.max(topLine, getHeight() / 2 - VPADDING * 2)
+                            + Math.max(bottomLeftChar.getBoundsInLocal().getHeight(), bottomRightChar.getBoundsInLocal().getHeight());
+
         topLeftChar.setLayoutY(topLine);
         topRightChar.setLayoutY(topLine);
         bottomLeftChar.setLayoutY(bottomLine);
         bottomRightChar.setLayoutY(bottomLine);
-        // horizontal alignment (needed only for the right column)
-        double topLeftWidth = fontLoader.computeStringWidth(topLeftChar.getText(), topLeftChar.getFont());
-        double bottomLeftWidth = fontLoader.computeStringWidth(bottomLeftChar.getText(), bottomLeftChar.getFont());
+
+        // Horizontal alignment (needed only for the right column)
+
+        /// Top left width
+        //double topLeftWidth = fontLoader.computeStringWidth(topLeftChar.getText(), topLeftChar.getFont());
+        double topLeftWidth = topLeftChar.getBoundsInLocal().getWidth();
+
+        /// Bottom left width
+        //double bottomLeftWidth = fontLoader.computeStringWidth(bottomLeftChar.getText(), bottomLeftChar.getFont());
+        double bottomLeftWidth = bottomLeftChar.getBoundsInLocal().getWidth();
+
         double maxLeftColumnLayoutX = Math.max(topLeftChar.getLayoutX(), bottomLeftChar.getLayoutX());
+
+        // offset based on left column width
         double xOffset = Math.max(
                 (getWidth() / 2 - HPADDING) + KEY_COLUMN_SPACE, // center of the key
-                Math.max(topLeftWidth, bottomLeftWidth) + maxLeftColumnLayoutX + KEY_COLUMN_SPACE); // offset based on left column width
+                Math.max(topLeftWidth, bottomLeftWidth) + maxLeftColumnLayoutX + KEY_COLUMN_SPACE
+        );
+
         topRightChar.setLayoutX(xOffset);
         bottomRightChar.setLayoutX(xOffset);
     }

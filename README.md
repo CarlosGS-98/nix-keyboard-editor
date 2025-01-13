@@ -1,39 +1,55 @@
 # Keyboard layout editor
-Keyboard layout editor is a JavaFX application made to help create custom keyboard layouts. 
-The application works with the <code>X&nbsp;Keyboard&nbsp;Extension&nbsp;(XKB)</code> (often found in the Linux, OpenSolaris, BSD). 
+*NIX Keyboard Editor is a JavaFX application made to help you create custom keyboard layouts for Unix-like OSes. 
+The application works with the <code>X&nbsp;Keyboard&nbsp;Extension&nbsp;(XKB)</code> (often found on Linux, OpenSolaris, BSD, etc.). 
 
-![Keyboard layout editor](https://raw.githubusercontent.com/vgresak/keyboard-layout-editor/master/editor.png)
+![Keyboard layout editor](https://raw.githubusercontent.com/CarlosGS-98/nix-keyboard-editor/master/editor.png)
 
 ## Requirements
-As this is a JavaFX application, you need both Java 8 and JavaFX to build and run the editor.
+As this is a revitalized JavaFX application, you need both Java 21 and JavaFX 21 to build and run the editor (the reason being that Java 21 is currently the latest LTS release of the language).
 
 ### Linux
-You can use your package manager to obtain Java 8 JDK: <code>sudo apt-get install openjdk-8-jdk</code>. Next install JavaFX. You can get OpenJFX (open source JavaFX implementation) build for Java 8 for example at [www.chriswhocodes.com](https://www.chriswhocodes.com/downloads/openjfx-8u60-sdk-overlay-linux-amd64.zip). Don't forget to include it in your JDK directory like this: <code>sudo unzip openjfx-8u60-sdk-overlay-linux-amd64.zip -d /usr/lib/jvm/java-8-openjdk-amd64/</code>.
+You can use your package manager to obtain Java 21 JDK and JavaFX 21 like follows:
 
-Optionally you can install [xkblayout-state](https://github.com/nonpop/xkblayout-state) on your system. If you won't, the editor will run just fine but the currently selected group will not be automatically displayed by the editor (you can still choose desired group via the menu in the editor).
+#### APT
+`$  sudo apt install openjdk-21-jdk`
 
-## Creating a runnable JAR file
-To build the application and to create an executable JAR file from sources run <code>/bin/bash ./gradlew fatJar</code> in the project directory (you can also run <code>gradle fatJar</code> if you have [gradle](https://gradle.org/) installed).
-Gradle task <code>fatJar</code> will create single JAR file that contains keyboard layout editor and all third-party libraries.
-Output file is located at <code>build/libs/keyboard-layout-editor-all-1.0-SNAPSHOT.jar</code>.
+#### Pacman
+`$  sudo pacman -S jdk21-openjdk java21-openjfx-bin`
+
+#### Zypper
+`$  sudo zypper install java-21-openjdk `
+
+If JavaFX 21 isn't listed on your package manager's database, you can always download the former using `wget`:
+`$   wget https://download2.gluonhq.com/openjfx/21.0.5/openjfx-21.0.5_linux-x64_bin-sdk.zip`
+
+Check out ![OpenJFX's website](https://openjfx.io/openjfx-docs/) to see how to manually install JavaFX on your system if you need to.
+
+### Other dependencies
+You can also install [xkblayout-state](https://github.com/nonpop/xkblayout-state) on your system. If you don't, the editor will run just fine, but the currently selected group won't be automatically displayed by the editor (although you can still choose the desired layout group via the menu in the editor).
 
 ## Running
-You can run the application using the <code>java -jar keyboard-layout-editor-all-1.0-SNAPSHOT.jar</code> command.
+You can run the application simply by typing `./mvnw javafx:run` on the repo's root folder.
 
 ## Features
 * Current keyboard layout is automatically imported from the X Server.
 * Symbol file can be exported and used by XKB to change the keyboard mapping.
 * There is a support for up to 4 characters (levels) per key.
 * Up to 8 layout groups are supported allowing definition of multiple keyboard layouts among which you can switch.
-* It is possible to set key type (xkb_type).
-* Generated characters are defined using Unicode (UXXXX and 0x100XXXX formats are supported), character map or using [keysym](https://www.cl.cam.ac.uk/~mgk25/ucs/keysymdef.h).
-* There are a lot of characters in Unicode and this application aims to be able to display them all correctly. Choose which font you want to be used in the virtual keyboard. When font does not support displayed character, application tries to detect it and select an alternative.
-* You can choose how the model of the keyboard is displayed. Select desired appearance of the keyboard or create and use your own. Keyboard model is described using simple JSON file – [see an example of a 104-key ANSI keyboard](https://github.com/vgresak/keyboard-layout-editor/blob/master/src/main/resources/model/ansi104.json).
-* Editor is not dependent on any specific GUI environment. It does not matter whether you use KDE, GNOME, Xfce or anything else.
-* Application can be used on any platform that supports Java 8 and JavaFX. If you are not using XKB, you can still work with the application and generate a symbol file (although you will not be able to use the file itself to change your keyboard mapping).
+* It is possible to set key types (`xkb_type`) for each key.
+* Generated characters are defined using Unicode (`UXXXX` and `0x100XXXX` formats are supported), character map or using [keysym](https://www.cl.cam.ac.uk/~mgk25/ucs/keysymdef.h).
+* There are a lot of characters in Unicode, and this application aims to be able to display them all correctly. Choose which font you want to use in the virtual keyboard. When a given font does not support displaying certain characters, the application tries to detect it and select an alternative.
+* You can choose which keyboard model to display in the editor. Select the desired appearance of the keyboard or create and use your own. Keyboard models are described using JSON files – [see an example of a 104-key ANSI keyboard](https://github.com/CarlosGS-98/nix-keyboard-editor/blob/master/src/main/resources/model/ansi104.json).
+* The editor doesn't depend on any specific GUI environment. It doesn't matter whether you use KDE, GNOME, Xfce or anything else.
+* The application can be used on any platform that supports Java 21 and JavaFX 21. If you are not using XKB, you can still work with the application and generate a symbol file (although you will not be able to use the file itself to change your keyboard mapping).
+
+## Planned Features
+- Creating keyboard layouts with more than 4 levels per key if the keyboard model supports it.
+- Adding dead key table files in a similar fashion to what ![KBDEdit](http://kbdedit.com) does (though with a different, unencrypted file format) so that, for example, multilingual keyboard layouts can be made faster by importing dead key pairs.
+ - In addition to the above, allowing the possibility to chain dead keys in the keyboard layouts, as well as making use of the Compose key. 
+- Importing KLC files into the editor (_probably hard to do_).
 
 ## Creating new XKB variants using the editor
-Working with XKB variants is not supported by the editor for now. Exported configuration is <code>xkb_symbols "basic"</code>. However, you can define your variant in different group and set export settings so that you export only current group without type - this way you get only symbols definitions for the current group. You can then use the definition however you like (e.g. define your own custom XKB variant).
+Working with XKB variants is not supported by the editor for now. The default export configuration is <code>xkb_symbols "basic"</code>. However, you can define your variant in different group and set export settings so that you export only current group without type - this way you get only symbols definitions for the current group. You can then use the definition however you like (e.g. define your own custom XKB variant).
 
 ## License
-Keyboard layout editor is MIT licensed (see LICENSE file).
+*NIX Keyboard Editor is MIT licensed (see LICENSE file).
