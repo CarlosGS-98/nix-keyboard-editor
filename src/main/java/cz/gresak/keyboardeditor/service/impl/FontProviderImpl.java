@@ -1,12 +1,5 @@
 package cz.gresak.keyboardeditor.service.impl;
 
-//import com.sun.javafx.font.CharToGlyphMapper;
-//import com.sun.javafx.font.FontFactory;
-//import com.sun.javafx.font.PGFont;
-//import com.sun.javafx.tk.FontLoader;
-//import com.sun.javafx.tk.FontMetrics;
-//import com.sun.javafx.tk.Toolkit;
-//import com.sun.prism.GraphicsPipeline;
 import cz.gresak.keyboardeditor.service.api.FontProvider;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -24,12 +17,10 @@ public class FontProviderImpl implements FontProvider {
     private static final Preferences preferences = Preferences.userRoot().node(FontProviderImpl.class.getName());
     private static FontProvider instance;
     private final List<DefaultFontChangedListener> listeners;
-    //private final FontFactory fontFactory;
     private Font defaultFont;
 
     public FontProviderImpl() {
         listeners = new ArrayList<>();
-        //fontFactory = GraphicsPipeline.getPipeline().getFontFactory();
         String fontName = preferences.get("font", Font.getDefault().getName());
         defaultFont = new Font(fontName, Font.getDefault().getSize());
     }
@@ -65,14 +56,7 @@ public class FontProviderImpl implements FontProvider {
     }
 
     private boolean canDisplay(String text, Font font) {
-        //PGFont pgFont = fontFactory.createFont(font.getName(), 13);
         java.awt.Font dummyFont = new java.awt.Font(font.getName(), java.awt.Font.PLAIN, 13);
-
-        /*if (pgFont == null) {
-            return false;
-        }*/
-
-        //CharToGlyphMapper glyphMapper = pgFont.getFontResource().getGlyphMapper();
         char[] chars = text.toCharArray();
 
         for (char character : chars) {
@@ -90,7 +74,6 @@ public class FontProviderImpl implements FontProvider {
         Text formattedText = new Text(text);
         formattedText.setFont(font);
 
-        //double sampleWidth = fontLoader.computeStringWidth(text, font);
         double sampleWidth = formattedText.getBoundsInLocal().getWidth();
         double fontSizeWidth = (widthToFit / sampleWidth) * font.getSize();
         double fontSizeHeight = (heightToFit / formattedText.getBoundsInLocal().getHeight()) * font.getSize();

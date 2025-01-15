@@ -5,7 +5,7 @@ The application works with the <code>X&nbsp;Keyboard&nbsp;Extension&nbsp;(XKB)</
 ![Keyboard layout editor](https://raw.githubusercontent.com/CarlosGS-98/nix-keyboard-editor/master/editor.png)
 
 ## Requirements
-As this is a revitalized JavaFX application, you need both Java 21 and JavaFX 21 to build and run the editor (the reason being that Java 21 is currently the latest LTS release of the language).
+As this JavaFX application has been revitalized, you need both Java 21 and JavaFX 21 to build and run the editor (the reason being that Java 21 is currently the latest LTS release of the language).
 
 ### Linux
 You can use your package manager to obtain Java 21 JDK and JavaFX 21 like follows:
@@ -45,9 +45,11 @@ You can run the application simply by typing `./mvnw javafx:run` on the repo's r
 ## Planned Features
 - Creating keyboard layouts with more than 4 levels per key if the keyboard model supports it.
 - Adding dead key table files in a similar fashion to what [KBDEdit](http://kbdedit.com) does (though with a different, unencrypted file format) so that, for example, multilingual keyboard layouts can be made faster by importing dead key pairs.
-  - In addition to the above, allowing the possibility to chain dead keys in the keyboard layouts, as well as making use of the Compose key. 
+  - In addition to the above, allowing the possibility to chain dead keys in the keyboard layouts, as well as making use of the Compose key.
+  - Aside from that, adding a dead key dialog similar to that of [MSKLC]() and/or KBDEdit.
 - Importing KLC files into the editor (_probably hard to do_).
-- Translating this application (and its Markdown documentation) to different languages. 
+- Translating this application (and its Markdown documentation) to different languages.
+- Adding custom color themes to the editor.
 
 ## Creating new XKB variants using the editor
 Working with XKB variants is not supported by the editor for now. The default export configuration is <code>xkb_symbols "basic"</code>. However, you can define your variant in different group and set export settings so that you export only current group without type - this way you get only symbols definitions for the current group. You can then use the definition however you like (e.g. define your own custom XKB variant).

@@ -7,23 +7,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CharacterMap extends Dialog<String> {
 
@@ -39,20 +30,27 @@ public class CharacterMap extends Dialog<String> {
     private Text symbolText;
     private Text unicodeText;
 
+    // Block sorting constants
+    private static final String UNICODE_ORDER = "Canonical Unicode Order";
+    private static final String ALPHABETICAL_ORDER = "Alphabetical Order";
+
     public CharacterMap() {
-        setTitle("Character map");
+        setTitle("Character Map");
         DialogPane dialogPane = getDialogPane();
         dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         BorderPane content = new BorderPane();
         dialogPane.setContent(content);
+
         content.setPrefHeight(400);
         content.setPrefWidth(600);
         content.setMinHeight(400);
         content.setMinWidth(600);
+
         content.setTop(top());
         content.setCenter(center());
         content.setBottom(bottom());
+
         setResultConverter(this::getResult);
     }
 
@@ -64,6 +62,7 @@ public class CharacterMap extends Dialog<String> {
         ObservableList<Node> children = topBar.getChildren();
         Insets leftTen = new Insets(0, 0, 0, 10);
 
+        // Font selector dialog
         HBox fontBox = new HBox();
         Text fontText = new Text("Font: ");
         fontBox.getChildren().add(fontText);
@@ -78,6 +77,7 @@ public class CharacterMap extends Dialog<String> {
 
         children.add(fontBox);
 
+        // Category selector dialog
         HBox categoryBox = new HBox();
         Text categoryText = new Text("Category: ");
         categoryBox.getChildren().add(categoryText);
@@ -87,23 +87,49 @@ public class CharacterMap extends Dialog<String> {
         categoryCombo.setItems(FXCollections.observableArrayList(Characters.categories()));
         categoryCombo.getSelectionModel().selectFirst();
         categoryCombo.setOnAction(event -> categoryChanged());
+
         categoryBox.getChildren().add(categoryCombo);
         HBox.setMargin(categoryCombo, leftTen);
 
         children.add(categoryBox);
 
+        // Category/Block sort dialog
+        HBox unicodeBlockSortBox = new HBox();
+        Text unicodeBlockSortText = new Text("Sort categories by: ");
+        unicodeBlockSortBox.getChildren().add(unicodeBlockSortText);
+
+        ToggleGroup unicodeBlockSortButtons = new ToggleGroup();
+
+        RadioButton sortByFirstCodepointButton = new RadioButton(CharacterMap.UNICODE_ORDER); // The expected default ordering
+        sortByFirstCodepointButton.setToggleGroup(unicodeBlockSortButtons);
+
+        RadioButton sortByCategoryNameButton = new RadioButton(CharacterMap.ALPHABETICAL_ORDER);
+        sortByCategoryNameButton.setToggleGroup(unicodeBlockSortButtons);
+
+        unicodeBlockSortButtons.selectedToggleProperty().addListener((observableValue, oldVal, newVal) -> {
+            RadioButton curButton = (RadioButton) newVal.getToggleGroup().getSelectedToggle();
+
+            switch(curButton.getText()) {
+                case CharacterMap.UNICODE_ORDER:
+                    categoryCombo.setItems(FXCollections.observableArrayList(Characters.categories()));
+                    break;
+                case CharacterMap.ALPHABETICAL_ORDER:
+                    categoryCombo.setItems(FXCollections.observableArrayList(Characters.alphabeticalOrder()));
+                    break;
+                default:
+                    break;
+            }
+
+            curButton.setSelected(true);
+        });
+
+        sortByFirstCodepointButton.setSelected(true);
+
+        unicodeBlockSortBox.getChildren().addAll(sortByFirstCodepointButton, sortByCategoryNameButton);
+        HBox.setMargin(unicodeBlockSortBox, new Insets(10, 0, 10, 10));
+        children.add(unicodeBlockSortBox);
+
         return topBar;
-    }
-
-    private void fontChanged(String selectedFamily) {
-        selectedFont = new Font(selectedFamily, selectedFont.getSize());
-        displayedCharacters.forEach(character -> character.setFont(selectedFont));
-        unicodeText.setFont(new Font(selectedFont.getName(), 20));
-        symbolText.setFont(new Font(selectedFont.getName(), 20));
-    }
-
-    private void categoryChanged() {
-        setCharacterGrid();
     }
 
     private ObservableList<String> getAllFamilies() {
@@ -119,6 +145,7 @@ public class CharacterMap extends Dialog<String> {
         gridPane = new GridPane();
         setCharacterGrid();
         centerPane.setContent(gridPane);
+
         return centerPane;
     }
 
@@ -132,6 +159,19 @@ public class CharacterMap extends Dialog<String> {
         return bottomPane;
     }
 
+    // Event methods
+    private void fontChanged(String selectedFamily) {
+        selectedFont = new Font(selectedFamily, selectedFont.getSize());
+        displayedCharacters.forEach(character -> character.setFont(selectedFont));
+        unicodeText.setFont(new Font(selectedFont.getName(), 20));
+        symbolText.setFont(new Font(selectedFont.getName(), 20));
+    }
+
+    private void categoryChanged() {
+        setCharacterGrid();
+    }
+
+    // Character map display methods
     private Text createLargeEmptyTextWithMargin(ObservableList<Node> children) {
         Text textWithMargin = new Text("");
         textWithMargin.setFont(new Font(selectedFont.getName(), 20));
@@ -143,11 +183,13 @@ public class CharacterMap extends Dialog<String> {
     private void setCharacterGrid() {
         displayedCharacters.clear();
         gridPane.getChildren().clear();
+
         String selectedCategory = categoryCombo.getSelectionModel().getSelectedItem();
         List<Pair<String, String>> characters = Characters.getCharacters(selectedCategory);
+        // System.out.println("[CATEGORY]:\t" + characters);
+
         for (int i = 0; i < characters.size(); i++) {
             createCharacterCell(characters, i);
-
         }
     }
 
@@ -189,6 +231,7 @@ public class CharacterMap extends Dialog<String> {
         if (ButtonType.CANCEL.equals(param)) {
             return null;
         }
+
         return selectedValue;
     }
 
@@ -201,39 +244,32 @@ public class CharacterMap extends Dialog<String> {
          * …
          * ]
          */
-        private static final Map<String, List<Pair<String, String>>> characters = new LinkedHashMap<>();
+        private static Map<String, List<Pair<String, String>>> characters = new LinkedHashMap<>();
 
         static {
-            characters.put("Basic Latin", generateRange(0x0020, 0x007F));
-            characters.put("Latin-1 Supplement", generateRange(0x00A1, 0x00FF));
+            /* Even though the ordering here doesn't actually matter at runtime,
+             * it helps to have all Unicode blocks listed in the code in the same order
+             * as they're defined by the Unicode Consortium so it becomes easier
+             * to include missing Unicode blocks if needed (and expand those already included).
+             * It feels more cohesive that way.
+             *
+             * All Unicode blocks listed here have been assigned as of Unicode 16.0.
+             * Block reference: https://en.wikipedia.org/wiki/Unicode_block
+             *
+             * P.D.: If the Unicode Consortium hasn't yet assigned some blocks,
+             * mark those missing gaps with comments in the code if possible. */
+
+            /// Plane 0 (Basic Miltilingual Plane | BMP)
+            characters.put("Basic Latin", generateRange(0x0000, 0x007F));
+            characters.put("Latin-1 Supplement", generateRange(0x0080, 0x00FF));
             characters.put("Latin Extended-A", generateRange(0x0100, 0x017F));
             characters.put("Latin Extended-B", generateRange(0x0180, 0x024F));
-            characters.put("General Punctuation", generateRange(0x2000, 0x206F));
-            characters.put("Supplemental Punctuation", generateRange(0x2E00, 0x2E4E));
-            characters.put("Mathematical Operators", generateRange(0x2200, 0x22FF));
-            characters.put("Mathematical Alphanumeric Symbols", generateRange(0x1D400, 0x1D7FF));
-            characters.put("Supplemental Mathematical Operators", generateRange(0x2A00, 0x2AFF));
-            characters.put("Miscellaneous Mathematical Symbols-A", generateRange(0x27C0, 0x27EF));
-            characters.put("Miscellaneous Mathematical Symbols-B", generateRange(0x2980, 0x29FF));
-            characters.put("Currency Symbols", generateRange(0x20A0, 0x20CF));
-            characters.put("Miscellaneous Symbols", generateRange(0x2600, 0x26FF));
-            characters.put("Miscellaneous Symbols and Arrows", generateRange(0x2B00, 0x2BFF));
-            characters.put("Supplemental Arrows-A", generateRange(0x27F0, 0x27FF));
-            characters.put("Supplemental Arrows-B", generateRange(0x2900, 0x297F));
-            characters.put("Supplemental Arrows-C", generateRange(0x1F800, 0x1F8FF));
-            characters.put("Supplemental Symbols and Pictographs", generateRange(0x1F900, 0x1F9FF));
-            characters.put("Box Drawing", generateRange(0x2500, 0x257F));
-            characters.put("Block Elements", generateRange(0x2580, 0x259F));
-            characters.put("Geometric Shapes", generateRange(0x25A0, 0x25FF));
             characters.put("IPA Extensions", generateRange(0x0250, 0x02AF));
             characters.put("Spacing Modifier Letters", generateRange(0x02B0, 0x02FF));
             characters.put("Combining Diacritical Marks", generateRange(0x0300, 0x036F));
             characters.put("Greek and Coptic", generateRange(0x0370, 0x03FF));
             characters.put("Cyrillic", generateRange(0x0400, 0x04FF));
             characters.put("Cyrillic Supplement", generateRange(0x0500, 0x052F));
-            characters.put("Cyrillic Extended-A", generateRange(0x2DE0, 0x2DFF));
-            characters.put("Cyrillic Extended-B", generateRange(0xA640, 0xA69F));
-            characters.put("Cyrillic Extended C", generateRange(0x1C80, 0x1C8F));
             characters.put("Armenian", generateRange(0x0530, 0x058F));
             characters.put("Hebrew", generateRange(0x0590, 0x05FF));
             characters.put("Arabic", generateRange(0x0600, 0x06FF));
@@ -244,6 +280,7 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Samaritan", generateRange(0x0800, 0x083F));
             characters.put("Mandaic", generateRange(0x0840, 0x085F));
             characters.put("Syriac Supplement", generateRange(0x0860, 0x086F));
+            characters.put("Arabic Extended-B", generateRange(0x0870, 0x089F));
             characters.put("Arabic Extended-A", generateRange(0x08A0, 0x08FF));
             characters.put("Devanagari", generateRange(0x0900, 0x097F));
             characters.put("Bengali", generateRange(0x0980, 0x09FF));
@@ -286,6 +323,8 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Batak", generateRange(0x1BC0, 0x1BFF));
             characters.put("Lepcha", generateRange(0x1C00, 0x1C4F));
             characters.put("Ol Chiki", generateRange(0x1C50, 0x1C7F));
+            characters.put("Cyrillic Extended-C", generateRange(0x1C80, 0x1C8F));
+            characters.put("Georgian Extended", generateRange(0x1C90, 0x1CBF));
             characters.put("Sundanese Supplement", generateRange(0x1CC0, 0x1CCF));
             characters.put("Vedic Extensions", generateRange(0x1CD0, 0x1CFF));
             characters.put("Phonetic Extensions", generateRange(0x1D00, 0x1D7F));
@@ -293,23 +332,38 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Combining Diacritical Marks Supplement", generateRange(0x1DC0, 0x1DFF));
             characters.put("Latin Extended Additional", generateRange(0x1E00, 0x1EFF));
             characters.put("Greek Extended", generateRange(0x1F00, 0x1FFF));
+            characters.put("General Punctuation", generateRange(0x2000, 0x206F));
             characters.put("Superscripts and Subscripts", generateRange(0x2070, 0x209F));
+            characters.put("Currency Symbols", generateRange(0x20A0, 0x20CF));
             characters.put("Combining Diacritical Marks for Symbols", generateRange(0x20D0, 0x20FF));
             characters.put("Letterlike Symbols", generateRange(0x2100, 0x214F));
             characters.put("Number Forms", generateRange(0x2150, 0x218F));
             characters.put("Arrows", generateRange(0x2190, 0x21FF));
+            characters.put("Mathematical Operators", generateRange(0x2200, 0x22FF));
             characters.put("Miscellaneous Technical", generateRange(0x2300, 0x23FF));
             characters.put("Control Pictures", generateRange(0x2400, 0x243F));
             characters.put("Optical Character Recognition", generateRange(0x2440, 0x245F));
             characters.put("Enclosed Alphanumerics", generateRange(0x2460, 0x24FF));
+            characters.put("Box Drawing", generateRange(0x2500, 0x257F));
+            characters.put("Block Elements", generateRange(0x2580, 0x259F));
+            characters.put("Geometric Shapes", generateRange(0x25A0, 0x25FF));
+            characters.put("Miscellaneous Symbols", generateRange(0x2600, 0x26FF));
             characters.put("Dingbats", generateRange(0x2700, 0x27BF));
+            characters.put("Miscellaneous Mathematical Symbols-A", generateRange(0x27C0, 0x27EF));
+            characters.put("Supplemental Arrows-A", generateRange(0x27F0, 0x27FF));
             characters.put("Braille Patterns", generateRange(0x2800, 0x28FF));
+            characters.put("Supplemental Arrows-B", generateRange(0x2900, 0x297F));
+            characters.put("Miscellaneous Mathematical Symbols-B", generateRange(0x2980, 0x29FF));
+            characters.put("Supplemental Mathematical Operators", generateRange(0x2A00, 0x2AFF));
+            characters.put("Miscellaneous Symbols and Arrows", generateRange(0x2B00, 0x2BFF));
             characters.put("Glagolitic", generateRange(0x2C00, 0x2C5F));
             characters.put("Latin Extended-C", generateRange(0x2C60, 0x2C7F));
             characters.put("Coptic", generateRange(0x2C80, 0x2CFF));
             characters.put("Georgian Supplement", generateRange(0x2D00, 0x2D2F));
             characters.put("Tifinagh", generateRange(0x2D30, 0x2D7F));
             characters.put("Ethiopic Extended", generateRange(0x2D80, 0x2DDF));
+            characters.put("Cyrillic Extended-A", generateRange(0x2DE0, 0x2DFF));
+            characters.put("Supplemental Punctuation", generateRange(0x2E00, 0x2E4E));
             characters.put("CJK Radicals Supplement", generateRange(0x2E80, 0x2EFF));
             characters.put("Kangxi Radicals", generateRange(0x2F00, 0x2FDF));
             characters.put("Ideographic Description Characters", generateRange(0x2FF0, 0x2FFF));
@@ -331,6 +385,7 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Yi Radicals", generateRange(0xA490, 0xA4CF));
             characters.put("Lisu", generateRange(0xA4D0, 0xA4FF));
             characters.put("Vai", generateRange(0xA500, 0xA63F));
+            characters.put("Cyrillic Extended-B", generateRange(0xA640, 0xA69F));
             characters.put("Bamum", generateRange(0xA6A0, 0xA6FF));
             characters.put("Modifier Tone Letters", generateRange(0xA700, 0xA71F));
             characters.put("Latin Extended-D", generateRange(0xA720, 0xA7FF));
@@ -369,6 +424,9 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Arabic Presentation Forms-B", generateRange(0xFE70, 0xFEFF));
             characters.put("Halfwidth and Fullwidth Forms", generateRange(0xFF00, 0xFFEF));
             characters.put("Specials", generateRange(0xFFF0, 0xFFFF));
+
+
+            /// Plane 1 (Supplementary Multilingual Plane | SMP)
             characters.put("Linear B Syllabary", generateRange(0x10000, 0x1007F));
             characters.put("Linear B Ideograms", generateRange(0x10080, 0x100FF));
             characters.put("Aegean Numbers", generateRange(0x10100, 0x1013F));
@@ -394,14 +452,17 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Imperial Aramaic", generateRange(0x10840, 0x1085F));
             characters.put("Palmyrene", generateRange(0x10860, 0x1087F));
             characters.put("Nabataean", generateRange(0x10880, 0x108AF));
+            /* (...) */
             characters.put("Hatran", generateRange(0x108E0, 0x108FF));
             characters.put("Phoenician", generateRange(0x10900, 0x1091F));
             characters.put("Lydian", generateRange(0x10920, 0x1093F));
+            /* (...) */
             characters.put("Meroitic Hieroglyphs", generateRange(0x10980, 0x1099F));
             characters.put("Meroitic Cursive", generateRange(0x109A0, 0x109FF));
             characters.put("Kharoshthi", generateRange(0x10A00, 0x10A5F));
             characters.put("Old South Arabian", generateRange(0x10A60, 0x10A7F));
             characters.put("Old North Arabian", generateRange(0x10A80, 0x10A9F));
+            /* (...) */
             characters.put("Manichaean", generateRange(0x10AC0, 0x10AFF));
             characters.put("Avestan", generateRange(0x10B00, 0x10B3F));
             characters.put("Inscriptional Parthian", generateRange(0x10B40, 0x10B5F));
@@ -409,7 +470,17 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Psalter Pahlavi", generateRange(0x10B80, 0x10BAF));
             characters.put("Old Turkic", generateRange(0x10C00, 0x10C4F));
             characters.put("Old Hungarian", generateRange(0x10C80, 0x10CFF));
+            characters.put("Hanifi Rohingya", generateRange(0x10D00, 0x10D3F));
+            characters.put("Garay", generateRange(0x10D00, 0x10D3F));
+            /* (...) */
             characters.put("Rumi Numeral Symbols", generateRange(0x10E60, 0x10E7F));
+            characters.put("Yezidi", generateRange(0x10E80, 0x10EBF));
+            characters.put("Arabic Extended-C", generateRange(0x10EC0, 0x10EFF));
+            characters.put("Old Sogdian", generateRange(0x10F00, 0x10F2F));
+            characters.put("Sogdian", generateRange(0x10F30, 0x10F6F));
+            characters.put("Old Uyghur", generateRange(0x10F70, 0x10FAF));
+            characters.put("Chorasmian", generateRange(0x10FB0, 0x10FDF));
+            characters.put("Elymaic", generateRange(0x10FE0, 0x10FFF));
             characters.put("Brahmi", generateRange(0x11000, 0x1107F));
             characters.put("Kaithi", generateRange(0x11080, 0x110CF));
             characters.put("Sora Sompeng", generateRange(0x110D0, 0x110FF));
@@ -418,51 +489,123 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Sharada", generateRange(0x11180, 0x111DF));
             characters.put("Sinhala Archaic Numbers", generateRange(0x111E0, 0x111FF));
             characters.put("Khojki", generateRange(0x11200, 0x1124F));
+            /* (...) */
             characters.put("Multani", generateRange(0x11280, 0x112AF));
             characters.put("Khudawadi", generateRange(0x112B0, 0x112FF));
             characters.put("Grantha", generateRange(0x11300, 0x1137F));
             characters.put("Newa", generateRange(0x11400, 0x1147F));
             characters.put("Tirhuta", generateRange(0x11480, 0x114DF));
+            /* (...) */
             characters.put("Siddham", generateRange(0x11580, 0x115FF));
             characters.put("Modi", generateRange(0x11600, 0x1165F));
             characters.put("Mongolian Supplement", generateRange(0x11660, 0x1167F));
             characters.put("Takri", generateRange(0x11680, 0x116CF));
+            characters.put("Myanmar Extended-C", generateRange(0x116D0, 0x116FF));
             characters.put("Ahom", generateRange(0x11700, 0x1173F));
+            /* (...) */
+            characters.put("Dogra", generateRange(0x11800, 0x1184F));
+            /* (...) */
             characters.put("Warang Citi", generateRange(0x118A0, 0x118FF));
+            characters.put("Dives Akuru", generateRange(0x11900, 0x1195F));
+            /* (...) */
+            characters.put("Nandinagari", generateRange(0x119A0, 0x119FF));
             characters.put("Zanabazar Square", generateRange(0x11A00, 0x11A4F));
             characters.put("Soyombo", generateRange(0x11A50, 0x11AAF));
+            characters.put("Unified Canadian Aboriginal Syllabics Extended-A", generateRange(0x11AB0, 0x11ABF));
             characters.put("Pau Cin Hau", generateRange(0x11AC0, 0x11AFF));
+            characters.put("Devanagari Extended-A", generateRange(0x11B00, 0x11B5F));
+            /* (...) */
+            characters.put("Sunuwar", generateRange(0x11BC0, 0x11BFF));
             characters.put("Bhaiksuki", generateRange(0x11C00, 0x11C6F));
             characters.put("Marchen", generateRange(0x11C70, 0x11CBF));
+            /* (...) */
             characters.put("Masaram Gondi", generateRange(0x11D00, 0x11D5F));
+            characters.put("Gunjala Gondi", generateRange(0x11D60, 0x11DAF));
+            /* (...) */
+            characters.put("Makasar", generateRange(0x11EE0, 0x11EFF));
+            characters.put("Kawi", generateRange(0x11EE0, 0x11EFF));
+            /* (...) */
+            characters.put("Lisu Supplement", generateRange(0x11FB0, 0x11FBF));
+            characters.put("Tamil Supplement", generateRange(0x11FC0, 0x11FFF));
             characters.put("Cuneiform", generateRange(0x12000, 0x123FF));
             characters.put("Cuneiform Numbers and Punctuation", generateRange(0x12400, 0x1247F));
             characters.put("Early Dynastic Cuneiform", generateRange(0x12480, 0x1254F));
+            /* (...) */
+            characters.put("Cypro-Minoan", generateRange(0x12F90, 0x12FFF));
             characters.put("Egyptian Hieroglyphs", generateRange(0x13000, 0x1342F));
+            characters.put("Egyptian Hieroglyph Format Controls", generateRange(0x13430, 0x1345F));
+            characters.put("Egyptian Hieroglyphs Extended-A", generateRange(0x13460, 0x143FF));
             characters.put("Anatolian Hieroglyphs", generateRange(0x14400, 0x1467F));
+            /* (...) */
+            characters.put("Gurung Khema", generateRange(0x16100, 0x1613F));
+            /* (...) */
             characters.put("Bamum Supplement", generateRange(0x16800, 0x16A3F));
             characters.put("Mro", generateRange(0x16A40, 0x16A6F));
+            characters.put("Tangsa", generateRange(0x16A70, 0x16ACF));
+            /* (...) */
             characters.put("Bassa Vah", generateRange(0x16AD0, 0x16AFF));
             characters.put("Pahawh Hmong", generateRange(0x16B00, 0x16B8F));
+            /* (...) */
+            characters.put("Kirat Rai", generateRange(0x16D40, 0x16B8F));
+            /* (...) */
+            characters.put("Medefaidrin", generateRange(0x16E40, 0x16E9F));
+            /* (...) */
             characters.put("Miao", generateRange(0x16F00, 0x16F9F));
+            /* (...) */
             characters.put("Ideographic Symbols and Punctuation", generateRange(0x16FE0, 0x16FFF));
             characters.put("Tangut", generateRange(0x17000, 0x187FF));
             characters.put("Tangut Components", generateRange(0x18800, 0x18AFF));
+            characters.put("Khitan Small Script", generateRange(0x18B00, 0x18CFF));
+            characters.put("Tangut Supplement", generateRange(0x18D00, 0x18D7F));
+            /* (...) */
+            characters.put("Kana Extended-B", generateRange(0x1AFF0, 0x1AFFF));
             characters.put("Kana Supplement", generateRange(0x1B000, 0x1B0FF));
             characters.put("Kana Extended-A", generateRange(0x1B100, 0x1B12F));
+            characters.put("Small Kana Extension", generateRange(0x1B130, 0x1B16F));
             characters.put("Nushu", generateRange(0x1B170, 0x1B2FF));
+            /* (...) */
             characters.put("Duployan", generateRange(0x1BC00, 0x1BC9F));
             characters.put("Shorthand Format Controls", generateRange(0x1BCA0, 0x1BCAF));
+            /* (...) */
+            characters.put("Symbols for Legacy Computing Supplement", generateRange(0x1CC00, 0x1CEBF));
+            /* (...) */
+            characters.put("Znamenny Musical Notation", generateRange(0x1CF00, 0x1CFCF));
+            /* (...) */
             characters.put("Byzantine Musical Symbols", generateRange(0x1D000, 0x1D0FF));
             characters.put("Musical Symbols", generateRange(0x1D100, 0x1D1FF));
             characters.put("Ancient Greek Musical Notation", generateRange(0x1D200, 0x1D24F));
+            /* (...) */
+            characters.put("Kaktovik Numerals", generateRange(0x1D2C0, 0x1D2DF));
+            characters.put("Mayan Numerals", generateRange(0x1D2E0, 0x1D2FF));
             characters.put("Tai Xuan Jing Symbols", generateRange(0x1D300, 0x1D35F));
             characters.put("Counting Rod Numerals", generateRange(0x1D360, 0x1D37F));
+            characters.put("Mathematical Alphanumeric Symbols", generateRange(0x1D400, 0x1D7FF));
             characters.put("Sutton SignWriting", generateRange(0x1D800, 0x1DAAF));
+            /* (...) */
+            characters.put("Latin Extended-G", generateRange(0x1DF00, 0x1DFFF));
             characters.put("Glagolitic Supplement", generateRange(0x1E000, 0x1E02F));
+            characters.put("Cyrillic Extended-D", generateRange(0x1E030, 0x1E08F));
+            /* (...) */
+            characters.put("Nyiakeng Puachue Hmong", generateRange(0x1E100, 0x1E14F));
+            /* (...) */
+            characters.put("Toto", generateRange(0x1E290, 0x1E2BF));
+            characters.put("Wancho", generateRange(0x1E2C0, 0x1E2FF));
+            /* (...) */
+            characters.put("Nag Mundari", generateRange(0x1E4D0, 0x1E4FF));
+            /* (...) */
+            characters.put("Ol Onal", generateRange(0x1E4D0, 0x1E4FF));
+            /* (...) */
+            characters.put("Ethiopic Extended-B", generateRange(0x1E7E0, 0x1E7FF));
             characters.put("Mende Kikakui", generateRange(0x1E800, 0x1E8DF));
+            /* (...) */
             characters.put("Adlam", generateRange(0x1E900, 0x1E95F));
+            /* (...) */
+            characters.put("Indic Siyaq Numbers", generateRange(0x1EC70, 0x1ECBF));
+            /* (...) */
+            characters.put("Ottoman Siyaq Numbers", generateRange(0x1ED00, 0x1ED4F));
+            /* (...) */
             characters.put("Arabic Mathematical Alphabetic Symbols", generateRange(0x1EE00, 0x1EEFF));
+            /* (...) */
             characters.put("Mahjong Tiles", generateRange(0x1F000, 0x1F02F));
             characters.put("Domino Tiles", generateRange(0x1F030, 0x1F09F));
             characters.put("Playing Cards", generateRange(0x1F0A0, 0x1F0FF));
@@ -474,27 +617,122 @@ public class CharacterMap extends Dialog<String> {
             characters.put("Transport and Map Symbols", generateRange(0x1F680, 0x1F6FF));
             characters.put("Alchemical Symbols", generateRange(0x1F700, 0x1F77F));
             characters.put("Geometric Shapes Extended", generateRange(0x1F780, 0x1F7FF));
+            characters.put("Supplemental Arrows-C", generateRange(0x1F800, 0x1F8FF));
+            characters.put("Supplemental Symbols and Pictographs", generateRange(0x1F900, 0x1F9FF));
+            characters.put("Chess Symbols", generateRange(0x1FA00, 0x1FA6F));
+            characters.put("Symbols and Pictographs Extended-A", generateRange(0x1FA70, 0x1FAFF));
+            characters.put("Symbols for Legacy Computing", generateRange(0x1FB00, 0x1FBFF));
+            /* (...) */
+
+
+            /// Plane 2 (Supplementary Ideographic Plane | SIP)
             characters.put("CJK Unified Ideographs Extension B", generateRange(0x20000, 0x2A6DF));
             characters.put("CJK Unified Ideographs Extension C", generateRange(0x2A700, 0x2B73F));
             characters.put("CJK Unified Ideographs Extension D", generateRange(0x2B740, 0x2B81F));
             characters.put("CJK Unified Ideographs Extension E", generateRange(0x2B820, 0x2CEAF));
             characters.put("CJK Unified Ideographs Extension F", generateRange(0x2CEB0, 0x2EBEF));
+            characters.put("CJK Unified Ideographs Extension I", generateRange(0x2EBF0, 0x2EE5F));
+            /* (...) */
             characters.put("CJK Compatibility Ideographs Supplement", generateRange(0x2F800, 0x2FA1F));
+            /* (...) */
+
+
+            /// Plane 3 (Tertiary Ideographic Plane | TIP)
+            characters.put("CJK Unified Ideographs Extension G", generateRange(0x30000, 0x3134F));
+            characters.put("CJK Unified Ideographs Extension H", generateRange(0x31350, 0x323AF));
+            /* (...) */
+
+
+            /// Plane 4 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 5 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 6 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 7 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 8 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 9 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 10 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 11 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 12 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 13 (Unassigned Plane | ¿?)
+            /* (...) */
+            /* No blocks in this plane yet... */
+            /* (...) */
+
+
+            /// Plane 14 (Supplementary Special-purpose Plane | SSP)
             characters.put("Tags", generateRange(0xE0000, 0xE007F));
+            /* (...) */
             characters.put("Variation Selectors Supplement", generateRange(0xE0100, 0xE01EF));
+            /* (...) */
+
+
+            /// Plane 15 (Private Use Area-A | PUA-A)
+            characters.put("Supplementary Private Use Area-A", generateRange(0xF0000, 0xFFFFF));
+
+
+            /// Plane 16 (Private Use Area-B | PUA-B)
+            characters.put("Supplementary Private Use Area-B ", generateRange(0x100000, 0x10FFFF));
         }
 
         private static List<Pair<String, String>> generateRange(int start, int end) {
             if (start >= end) {
                 return Collections.emptyList();
             }
+
             List<Pair<String, String>> result = new ArrayList<>(end - start);
+
+            // Store both the corresponding glyph and its hex value within a Unicode block
             for (int i = start; i <= end; i++) {
                 String representation = new String(Character.toChars(i));
                 String value = String.format("U%04X", i);
-                result.add(new Pair<>(representation, value));
 
+                result.add(new Pair<>(representation, value));
             }
+
             return result;
         }
 
@@ -502,9 +740,37 @@ public class CharacterMap extends Dialog<String> {
             return characters.keySet();
         }
 
-        static List<Pair<String, String>> getCharacters(String category) {
-            return characters.get(category);
+        // Unicode block sorting methods
+        static Set<String> alphabeticalOrder() {
+            Set<String> alphaOrderSet = new TreeSet<>(String::compareTo);
+            alphaOrderSet.addAll(characters.keySet());
+
+            return alphaOrderSet;
         }
 
+//        static Set<String> unicodeOrder() {
+//            Set<String> canonOrderSet = new HashSet<>();
+//            List<Pair<String, String>> dummyOrderList = new ArrayList<>();
+//
+//            // First iteration (with first codepoints)
+//            for(Entry<String, List<Pair<String, String>>> charEntry : characters.entrySet()) {
+//                // System.out.println("[BLOCK]:\t" + charEntry.getKey() + " | [FIRST]: " + charEntry.getValue().getFirst().getValue());
+//                dummyOrderList.add(new Pair<>(charEntry.getKey(), charEntry.getValue().getFirst().getValue()));
+//            }
+//
+//            dummyOrderList.sort(Comparator.comparing(Pair::getValue));
+//
+//            // Second iteration (without codepoints)
+//            for(Pair<String, String> dummyEntry : dummyOrderList) {
+//                canonOrderSet.add(dummyEntry.getKey());
+//            }
+//
+//            return canonOrderSet;
+//        }
+
+        static List<Pair<String, String>> getCharacters(String category) {
+            // System.out.println(characters.get(category));
+            return characters.get(category);
+        }
     }
 }

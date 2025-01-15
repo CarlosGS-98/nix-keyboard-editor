@@ -1,8 +1,5 @@
 package cz.gresak.keyboardeditor.component;
 
-//import com.sun.javafx.tk.FontLoader;
-//import com.sun.javafx.tk.FontMetrics;
-//import com.sun.javafx.tk.Toolkit;
 import cz.gresak.keyboardeditor.model.ModelKey;
 import cz.gresak.keyboardeditor.service.ServiceLoader;
 import cz.gresak.keyboardeditor.service.api.FontProvider;
@@ -86,6 +83,8 @@ public class Key extends Pane {
     private void setChars() {
         int group = groupState.getGroup();
         List<String> groupValues = key.getGroup(group);
+
+        // System.out.println("Current key group values = " + groupValues + "\n");
         setChars(groupValues);
     }
 
@@ -156,17 +155,6 @@ public class Key extends Pane {
      * Updates position of text.
      */
     private void layoutChars() {
-        /*FontLoader fontLoader = Toolkit.getToolkit().getFontLoader();
-        FontMetrics topLeftFont = fontLoader.getFontMetrics(topLeftChar.getFont());
-        FontMetrics bottomLeftFont = fontLoader.getFontMetrics(bottomLeftChar.getFont());
-        FontMetrics topRightFont = fontLoader.getFontMetrics(topRightChar.getFont());
-        FontMetrics bottomRightFont = fontLoader.getFontMetrics(bottomRightChar.getFont());*/
-
-        /*Font topLeftFont = topLeftChar.getFont();
-        Font bottomLeftFont = bottomLeftChar.getFont();
-        Font topRightFont = topRightChar.getFont();
-        Font bottomRightFont = bottomRightChar.getFont();*/
-
         // Vertical alignment
         double topLine = Math.max(
                 topLeftChar.getBoundsInLocal().getHeight(),
@@ -184,11 +172,9 @@ public class Key extends Pane {
         // Horizontal alignment (needed only for the right column)
 
         /// Top left width
-        //double topLeftWidth = fontLoader.computeStringWidth(topLeftChar.getText(), topLeftChar.getFont());
         double topLeftWidth = topLeftChar.getBoundsInLocal().getWidth();
 
         /// Bottom left width
-        //double bottomLeftWidth = fontLoader.computeStringWidth(bottomLeftChar.getText(), bottomLeftChar.getFont());
         double bottomLeftWidth = bottomLeftChar.getBoundsInLocal().getWidth();
 
         double maxLeftColumnLayoutX = Math.max(topLeftChar.getLayoutX(), bottomLeftChar.getLayoutX());
@@ -206,6 +192,8 @@ public class Key extends Pane {
     private void setChars(List<String> keysyms) {
         List<String> symbols = getSymbols(keysyms);
         keyLayout = KeyLayout.SINGLE_LINE;
+        // System.out.println(symbols);
+
         if (symbols.isEmpty()) {
             setTopLeft("");
             setBottomLeft("");
@@ -299,6 +287,8 @@ public class Key extends Pane {
         if (StringUtils.isBlank(text)) {
             text = "NoSymbol";
         }
+
+        // System.out.println("New character value = " + text + "\n");
         keysymsInGroup.set(levelIndex, text);
         updateContent();
     }

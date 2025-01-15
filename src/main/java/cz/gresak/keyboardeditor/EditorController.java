@@ -327,6 +327,7 @@ public class EditorController implements Initializable {
     }
 
     private void setValue(String text) {
+        // // System.out.println("Final selected character = " + text + "\n");
         int levelIndex = comboLevel.getSelectionModel().getSelectedIndex();
         int group = groupState.getGroup();
         selectedKey.setValue(text, levelIndex, group);
@@ -489,7 +490,7 @@ public class EditorController implements Initializable {
     private VBox getCommandHintContent() {
         VBox content = new VBox();
         content.setSpacing(10);
-        content.getChildren().add(new Text("To use exported layout immediately, run following commands:"));
+        content.getChildren().add(new Text("To use the exported layout immediately, run the following commands:"));
         TextArea commands = new TextArea();
         commands.setEditable(false);
         commands.setText(exportCommandHint);
