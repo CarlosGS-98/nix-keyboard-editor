@@ -46,7 +46,7 @@ You can run the application simply by typing `./mvnw javafx:run` on the repo's r
 - Creating keyboard layouts with more than 4 levels per key if the keyboard model supports it.
 - Adding dead key table files in a similar fashion to what [KBDEdit](http://kbdedit.com) does (though with a different, unencrypted file format) so that, for example, multilingual keyboard layouts can be made faster by importing dead key pairs.
   - In addition to the above, allowing the possibility to chain dead keys in the keyboard layouts, as well as making use of the Compose key.
-  - Aside from that, adding a dead key dialog similar to that of [MSKLC]() and/or KBDEdit.
+  - Aside from that, adding a dead key dialog similar to that of [MSKLC](https://www.microsoft.com/en-US/download/details.aspx?id=102134) and/or KBDEdit.
 - Importing KLC files into the editor (_probably hard to do_).
 - Translating this application (and its Markdown documentation) to different languages.
 - Adding custom color themes to the editor.
